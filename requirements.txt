@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+jinja2
+httpx
+faiss-cpu
+
+torch
+accelerate
+transformers
+sentence-transformers
+

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RAG Demo</title>
+</head>
+<body>
+    <h1>RAG Web Demo</h1>
+    <form method="post">
+        <input type="text" name="user_input" value="{{ user_input or '' }}" placeholder="질문을 입력하세요" required>
+        <button type="submit">질문하기</button>
+    </form>
+    {% if answer %}
+        <h2>답변:</h2>
+        <pre>{{ answer }}</pre>
+    {% endif %}
+</body>
+</html>
