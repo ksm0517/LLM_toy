@@ -13,6 +13,7 @@ class ChatApp:
     - 모델 객체(Model) 생성
     - 라우트 등록
     """
+
     def __init__(self):
         """
         ChatApp 클래스의 생성자.
@@ -24,6 +25,7 @@ class ChatApp:
         self.api_key = os.getenv("MY_API_KEY")
         self.model_class = Model(api_key=self.api_key)
         self._add_routes()
+
 
     def _add_routes(self):
         """
@@ -46,6 +48,7 @@ class ChatApp:
             """
             answer = self.model_class.answer(user_input)
             return self.templates.TemplateResponse("index.html", {"request": request, "answer": answer, "user_input": user_input})
+
 
 # 인스턴스 생성 및 FastAPI 앱 객체 노출
 chat_app = ChatApp()  # 챗봇 웹앱 클래스 인스턴스 생성
