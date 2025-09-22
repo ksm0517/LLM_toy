@@ -1,119 +1,123 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>RAG Demo</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .container {
-            margin-bottom: 30px;
-        }
-        h1 {
-            color: #333;
-        }
-        form {
-            margin-bottom: 20px;
-        }
-        input[type="text"] {
-            width: 70%;
-            padding: 10px;
-            margin-right: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        pre {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            white-space: pre-wrap;
-        }
-        .upload-form {
-            border: 2px dashed #ccc;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        #upload-status {
-            margin-top: 10px;
-            padding: 10px;
-            display: none;
-        }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG 챗봇</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
     <script>
-        function uploadFile(event) {
+        // PDF 업로드 처리
+        async function uploadFile(event) {
             event.preventDefault();
-            
-            const formData = new FormData();
-            const fileInput = document.getElementById('file-input');
-            formData.append('file', fileInput.files[0]);
-            
+            const formData = new FormData(event.target);
             const statusDiv = document.getElementById('upload-status');
-            
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                statusDiv.textContent = data.message;
-                statusDiv.className = 'success';
-                statusDiv.style.display = 'block';
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 5000);
-            })
-            .catch(error => {
-                statusDiv.textContent = '업로드 중 오류가 발생했습니다: ' + error.message;
-                statusDiv.className = 'error';
-                statusDiv.style.display = 'block';
-            });
-            
-            fileInput.value = '';
+            statusDiv.textContent = '업로드 및 처리 중...';
+            statusDiv.className = 'status-message status-processing';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusDiv.textContent = result.message;
+                    statusDiv.className = 'status-message status-success';
+                    event.target.reset(); // 폼 초기화
+                } else {
+                    statusDiv.textContent = '오류: ' + result.detail;
+                    statusDiv.className = 'status-message status-error';
+                }
+            } catch (error) {
+                statusDiv.textContent = '서버와 통신 중 오류가 발생했습니다.';
+                statusDiv.className = 'status-message status-error';
+            }
         }
+
+        // 텍스트 추가 처리
+        async function addText(event) {
+            event.preventDefault();
+            const textInput = document.getElementById('text-input').value;
+            const statusDiv = document.getElementById('add-text-status');
+
+            if (!textInput.trim()) {
+                alert('추가할 내용을 입력해주세요.');
+                return;
+            }
+
+            statusDiv.textContent = '텍스트 추가 중...';
+            statusDiv.className = 'status-message status-processing';
+
+            const formData = new FormData();
+            formData.append('text_input', textInput);
+
+            try {
+                const response = await fetch('/add_text', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusDiv.textContent = result.message;
+                    statusDiv.className = 'status-message status-success';
+                    event.target.reset(); // 폼 초기화
+                } else {
+                    statusDiv.textContent = '오류: ' + result.detail;
+                    statusDiv.className = 'status-message status-error';
+                }
+            } catch (error) {
+                statusDiv.textContent = '서버와 통신 중 오류가 발생했습니다.';
+                statusDiv.className = 'status-message status-error';
+            }
+        }
+        
+        // DOM이 로드된 후 이벤트 리스너를 추가합니다.
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('upload-form').addEventListener('submit', uploadFile);
+            document.getElementById('add-text-form').addEventListener('submit', addText);
+        });
     </script>
 </head>
 <body>
-    <h1>RAG Web Demo</h1>
-    
     <div class="container">
-        <div class="upload-form">
-            <h3>PDF 파일 업로드</h3>
-            <form onsubmit="uploadFile(event)">
-                <input type="file" id="file-input" accept=".pdf" required>
+        <h1>RAG Web Demo</h1>
+
+        <!-- 문서 업로드 섹션 -->
+        <div class="card">
+            <h2>PDF 문서 업로드</h2>
+            <form id="upload-form" enctype="multipart/form-data">
+                <input type="file" name="file" id="file-input" accept=".pdf" required>
                 <button type="submit">업로드</button>
             </form>
-            <div id="upload-status"></div>
+            <div id="upload-status" class="status-message"></div>
         </div>
-    
-        <form method="post">
-            <input type="text" name="user_input" value="{{ user_input or '' }}" placeholder="질문을 입력하세요" required>
-            <button type="submit">질문하기</button>
-        </form>
-        
-        {% if answer %}
-            <h2>답변:</h2>
-            <pre>{{ answer }}</pre>
-        {% endif %}
+
+        <!-- 텍스트 추가 섹션 -->
+        <div class="card">
+            <h2>지식(텍스트) 추가</h2>
+            <form id="add-text-form">
+                <textarea name="text_input" id="text-input" rows="3" placeholder="RAG에 활용할 문장이나 단락을 입력하세요."></textarea>
+                <button type="submit">텍스트 추가</button>
+            </form>
+            <div id="add-text-status" class="status-message"></div>
+        </div>
+
+        <!-- 채팅 섹션 -->
+        <div class="card">
+            <h2>챗봇에게 질문하기</h2>
+            <form action="/" method="post">
+                <textarea name="user_input" rows="3" placeholder="질문을 입력하세요...">{{ user_input or '' }}</textarea>
+                <button type="submit">질문하기</button>
+            </form>
+            {% if answer %}
+            <div class="answer-box">
+                <h3>답변:</h3>
+                <p>{{ answer }}</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>

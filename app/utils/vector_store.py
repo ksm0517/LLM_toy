@@ -33,8 +33,8 @@ class VectorStore:
         self.documents: Dict[int, str] = {}
         self.next_id = 0
         
-        self.embedder = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-        self.embedding_dim = 384
+        self.embedder = SentenceTransformer("sentence-transformers/LaBSE")
+        self.embedding_dim = 768
         
         # FAISS 인덱스 초기화
         index = faiss.IndexFlatIP(self.embedding_dim)
@@ -249,14 +249,13 @@ class VectorStore:
 
             # 안전을 위해 명시적으로 float32로 변환
             query_vec_np = np.array(query_vec, dtype=np.float32)
-
             k = min(top_k, self.index.ntotal)
-            
             distances, ids = self.index.search(query_vec_np, k)
 
             results = []
             if ids.size > 0:
                 for doc_id, sim in zip(ids[0], distances[0]):
+                    logger.info(f"검색 결과 - ID: {doc_id}, 유사도: {sim}")
                     if doc_id != -1 and sim >= threshold and doc_id in self.documents:
                         results.append({
                             'doc_id': int(doc_id),

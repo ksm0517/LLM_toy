@@ -1,0 +1,64 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+.container {
+    margin-bottom: 30px;
+}
+h1 {
+    color: #333;
+}
+form {
+    margin-bottom: 20px;
+}
+textarea,
+input[type="text"] {
+    width: 70%;
+    padding: 10px;
+    margin-right: 10px;
+}
+button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #0056b3;
+}
+pre {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    white-space: pre-wrap;
+}
+.upload-form {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 30px;
+}
+.text-add-form {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+#upload-status, #add-text-status {
+    margin-top: 10px;
+    padding: 10px;
+    display: none;
+}
+.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+.answer-box p {
+  white-space: pre-line;
+}

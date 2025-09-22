@@ -46,7 +46,7 @@ class ChatApp:
         # 정적 파일 서빙 설정
         self.app.mount(
             "/static", 
-            StaticFiles(directory=BASE_DIR / "static"), 
+            StaticFiles(directory=str(BASE_DIR / "static")), 
             name="static"
         )
         
@@ -99,6 +99,23 @@ class ChatApp:
             answer = self.model_class.answer(user_input, context=context)
             return self.templates.TemplateResponse("index.html", {"request": request, "answer": answer, "user_input": user_input})
             
+        @self.app.post("/add_text", response_class=JSONResponse)
+        async def add_text(request: Request, text_input: str = Form(...)):
+            """
+            사용자가 입력한 텍스트를 VectorStore에 추가합니다.
+            """
+            try:
+                if not text_input or not text_input.strip():
+                    raise HTTPException(status_code=400, detail="내용이 비어있습니다.")
+                
+                # DocumentLoader에 텍스트를 추가하는 메서드 호출 (DocumentLoader에 구현 필요)
+                self.doc_loader.add_text_document(text_input)
+                
+                return JSONResponse(content={"message": "텍스트가 성공적으로 추가되었습니다."}, status_code=200)
+            except Exception as e:
+                logger.error(f"텍스트 추가 중 오류 발생: {e}")
+                raise HTTPException(status_code=500, detail=f"텍스트 추가 중 오류가 발생했습니다: {str(e)}")
+
         @self.app.post("/upload")
         async def upload_file(file: UploadFile = File(...)):
             """
