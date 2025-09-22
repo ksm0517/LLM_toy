@@ -1,4 +1,3 @@
-from .retrieval import retrieve_docs
 from .utils.exceptions import ModelException
 from .models.groq_llm import GroqLLM
 from .models.local_llm import LocalLLM
@@ -40,43 +39,9 @@ class Model:
             raise ModelException(f"Model 초기화 실패: {str(e)}")
 
 
-    def retrieve(self, query: str, threshold: float = 0.4) -> str:
-        """
-        주어진 쿼리(query)에 대해 벡터DB에서 관련 문서를 검색합니다.
-        
-        Args:
-            query: 검색할 질문
-            threshold: 임베딩 유사도 기준값 (기본값: 0.4)
-            
-        Returns:
-            str: 검색된 문서들을 하나의 문자열로 합친 컨텍스트
-            
-        Raises:
-            ModelException: 문서 검색 실패 시
-        """
-        try:
-            if not isinstance(query, str):
-                raise ModelException("query는 문자열이어야 합니다.")
-            if not isinstance(threshold, float) or threshold <= 0 or threshold > 1:
-                raise ModelException("threshold는 0과 1 사이의 실수여야 합니다.")
-
-            docs = retrieve_docs(query, threshold)
-            
-            if not docs:
-                return "관련 문서가 없습니다."
-                
-            # 여러 문서를 하나의 context로 합침
-            context_lines = [f"문서 {i+1}: {doc}" for i, doc in enumerate(docs)]
-            context = "\n".join(context_lines)
-            return context
-            
-        except Exception as e:
-            logger.error(f"문서 검색 실패: {str(e)}")
-            raise ModelException(f"문서 검색 실패: {str(e)}")
-
-
     def answer(self, 
                 query: str, 
+                context: Optional[str] = None,
                 temperature: float = 0.3,
                 top_p: float = 0.9,
                 top_k: int = 50,
@@ -86,6 +51,7 @@ class Model:
         
         Args:
             query: 사용자 질문
+            context: RAG 검색 결과 (없을 경우 일반 답변 생성)
             temperature: 응답의 다양성을 조절하는 값 (0~2, 기본값: 0.3)
             top_p: 누적 확률 기반 샘플링을 위한 임계값 (0~1, 기본값: 0.9)
             top_k: 다음 토큰 선택 시 고려할 상위 k개의 토큰 수 (양의 정수, 기본값: 50)
@@ -109,9 +75,8 @@ class Model:
                 raise ModelException("top_k는 양의 정수여야 합니다.")
             if not isinstance(max_tokens, int) or max_tokens <= 0:
                 raise ModelException("max_tokens는 양의 정수여야 합니다.")
-                
+            
             # RAG 검색 및 답변 생성
-            context = self.retrieve(query)
             messages = self.llm.make_message(context, query)
             llm_answer = self.llm.generate_answer(
                 messages,
@@ -123,7 +88,7 @@ class Model:
             
             if not llm_answer:
                 raise ModelException("LLM이 유효한 답변을 생성하지 못했습니다.")
-                
+            logger.info(f"답변 생성 완료: {llm_answer}")
             return llm_answer
             
         except Exception as e:

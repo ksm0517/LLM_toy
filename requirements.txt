@@ -2,12 +2,15 @@ fastapi==0.116.1
 uvicorn==0.35.0
 jinja2==3.1.6
 httpx==0.28.1
+torch==2.8.0
 faiss-cpu==1.12.0
 
-torch==2.8.0
 accelerate==1.10.1
 transformers==4.56.0
 sentence-transformers==5.1.0
 groq==0.31.1
 python-dotenv==1.1.1
 python-multipart==0.0.20
+pymupdf4llm==0.0.27
+llama-index-core==0.14.2
+langchain==0.3.27

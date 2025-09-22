@@ -1,6 +1,5 @@
 """Local LLM implementation using TinyLlama"""
 import logging
-from typing import Optional, List, Dict, Any, Union
 import torch
 from transformers import pipeline
 

@@ -2,16 +2,118 @@
 <html>
 <head>
     <title>RAG Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .upload-form {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #upload-status {
+            margin-top: 10px;
+            padding: 10px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+    <script>
+        function uploadFile(event) {
+            event.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('file-input');
+            formData.append('file', fileInput.files[0]);
+            
+            const statusDiv = document.getElementById('upload-status');
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                statusDiv.textContent = data.message;
+                statusDiv.className = 'success';
+                statusDiv.style.display = 'block';
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            })
+            .catch(error => {
+                statusDiv.textContent = '업로드 중 오류가 발생했습니다: ' + error.message;
+                statusDiv.className = 'error';
+                statusDiv.style.display = 'block';
+            });
+            
+            fileInput.value = '';
+        }
+    </script>
 </head>
 <body>
     <h1>RAG Web Demo</h1>
-    <form method="post">
-        <input type="text" name="user_input" value="{{ user_input or '' }}" placeholder="질문을 입력하세요" required>
-        <button type="submit">질문하기</button>
-    </form>
-    {% if answer %}
-        <h2>답변:</h2>
-        <pre>{{ answer }}</pre>
-    {% endif %}
+    
+    <div class="container">
+        <div class="upload-form">
+            <h3>PDF 파일 업로드</h3>
+            <form onsubmit="uploadFile(event)">
+                <input type="file" id="file-input" accept=".pdf" required>
+                <button type="submit">업로드</button>
+            </form>
+            <div id="upload-status"></div>
+        </div>
+    
+        <form method="post">
+            <input type="text" name="user_input" value="{{ user_input or '' }}" placeholder="질문을 입력하세요" required>
+            <button type="submit">질문하기</button>
+        </form>
+        
+        {% if answer %}
+            <h2>답변:</h2>
+            <pre>{{ answer }}</pre>
+        {% endif %}
+    </div>
 </body>
 </html>
